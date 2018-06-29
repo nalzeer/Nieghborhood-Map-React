@@ -7,7 +7,7 @@ import $ from 'jquery'
 
 let markers = []
 let infoWindows = []
-// let contentWindow = ""
+let contentWindow = ""
 
 class App extends Component {
   constructor(props) {
@@ -30,10 +30,6 @@ class App extends Component {
   updatequery =(query) => {
     this.setState({query: query.trim()})
   }
-
-  updateData = (arr) => {
-      this.setState({venues: arr})
-    }
 
   componentWillReceiveProps({isScriptLoadSucceed}){
     if (isScriptLoadSucceed) {
@@ -63,10 +59,18 @@ class App extends Component {
         url: url,
         dataType: "json",
         success: function(data){
-          let valvenue = [...data.response.venues]
-          const arr = Object.keys(valvenue).map(function (key) { return valvenue[key] })
-          that.updateData(arr)
-          console.log(typeof arr)
+          const valvenue = data.response.venues[0]
+          const result = Object.keys(valvenue).map(function(key) {
+            return [valvenue[key]]
+          })
+          console.log(result)
+          console.log(typeof result)
+          that.setState({venues: result})
+          if(location.title === valvenue.name){
+           return contentWindow = `<div class="infoWindow">
+          <h4>${valvenue.name}</h4>
+          <p>${valvenue.location.formattedAddress}</p>
+          </div>`}
         },
         error: function(data){
           console.error(data)
@@ -78,7 +82,6 @@ class App extends Component {
   componentDidUpdate(){
     //search query from: https://github.com/udacity/reactnd-contacts-complete/blob/master/src/ListContacts.js
     const {locations, query, map} = this.state
-    let{venues} = this.state
     let showingLocations = locations
     if (query){
       const match = new RegExp(escapeRegExp(query),'i')
@@ -91,16 +94,8 @@ class App extends Component {
     // Make the markers and the infoWindows empty
     markers = []
     infoWindows = []
-    console.log(venues)
-    console.log(typeof venues)
-    showingLocations.forEach((marker,index)=> {
-      // let moreInfo = this.state.venues.filter((more) => marker.title === more[0].name)
-      // console.log("data "+ moreInfo)
-      let contentWindow = `<div class="infoWindow">
-      <h4>${venues.name}</h4>
-      <p>${venues.location}</p>
-      </div>`
 
+    showingLocations.forEach((marker,index)=> {
       //Creat a new InfoWindow, then add the contentWindow to it
       let LargeInfoWindow = new window.google.maps.InfoWindow({
         content: contentWindow
