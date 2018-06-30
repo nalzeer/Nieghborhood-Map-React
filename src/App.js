@@ -8,6 +8,7 @@ import $ from 'jquery'
 let markers = []
 let infoWindows = []
 let contentWindow = ""
+// let venueresult = []
 
 class App extends Component {
   constructor(props) {
@@ -30,12 +31,12 @@ class App extends Component {
   updatequery =(query) => {
     this.setState({query: query.trim()})
   }
-
+ // react.componant
   componentWillReceiveProps({isScriptLoadSucceed}){
     if (isScriptLoadSucceed) {
       //Constructor creates a new map
       const map = new window.google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
+        zoom: 16,
         //initial point of location
         center: new window.google.maps.LatLng(37.7749295,-122.4194155)
       });
@@ -47,7 +48,7 @@ class App extends Component {
       this.setState({requestWasSuccessful: false})
     }
   }
-
+  // mounting (react.componant)
   componentDidMount(){
     const that = this
     //Fetching the locations from foursquare API
@@ -59,18 +60,19 @@ class App extends Component {
         url: url,
         dataType: "json",
         success: function(data){
-          const valvenue = data.response.venues[0]
-          const result = Object.keys(valvenue).map(function(key) {
-            return [valvenue[key]]
+          const valvenues = data.response.venues
+          $.each(valvenues, function(i,venue){
+            that.setState({venues: venue})
+            console.log(venue)
+            return contentWindow = `<div class="infoWindow">
+                <h4>${venue.name}</h4>
+                <p>${location.phone}</p>
+                <p>${venue.location.formattedAddress}</p>
+                </div>`
           })
-          console.log(result)
-          console.log(typeof result)
-          that.setState({venues: result})
-          if(location.title === valvenue.name){
-           return contentWindow = `<div class="infoWindow">
-          <h4>${valvenue.name}</h4>
-          <p>${valvenue.location.formattedAddress}</p>
-          </div>`}
+          // venueresult = Object.keys(valvenues).map(function(key) {
+          //      return [valvenues[key]];
+          //    })
         },
         error: function(data){
           console.error(data)
@@ -78,17 +80,17 @@ class App extends Component {
       })
     })
   }
-
+  //updating (react.componant)
   componentDidUpdate(){
     //search query from: https://github.com/udacity/reactnd-contacts-complete/blob/master/src/ListContacts.js
     const {locations, query, map} = this.state
     let showingLocations = locations
     if (query){
-      const match = new RegExp(escapeRegExp(query),'i')
+      const match = new RegExp(escapeRegExp(query),"i")
       showingLocations = locations.filter((location)=> match.test(location.title))
     }
-    else{
-      showingLocations=locations
+    else {
+      showingLocations = locations
     }
     markers.forEach(mark => { mark.setMap(null) })
     // Make the markers and the infoWindows empty
@@ -96,51 +98,52 @@ class App extends Component {
     infoWindows = []
 
     showingLocations.forEach((marker,index)=> {
-      //Creat a new InfoWindow, then add the contentWindow to it
+      //Creat InfoWindow object, then add the contentWindow to it
       let LargeInfoWindow = new window.google.maps.InfoWindow({
         content: contentWindow
       })
-      //Extend the map bound
+      //Creat Bounds object
       let bounds = new window.google.maps.LatLngBounds()
       //Create the marker
       let locMarker = new window.google.maps.Marker({
         map: map,
         position: marker.location,
-        animation: window.google.maps.Animation.DROP,
-        name : marker.title
+        name : marker.title,
+        animation: window.google.maps.Animation.DROP
       })
-      //Add the marker to the list of marker
+
       markers.push(locMarker)
       infoWindows.push(LargeInfoWindow)
-      locMarker.addListener('click', function() {
-          //Close windows before open the another
+
+      locMarker.addListener("click", function() {
+          //Close the infoWindow, when open another infoWindow
           infoWindows.forEach(info => { info.close() })
+          //Open the InfoWindow function
           LargeInfoWindow.open(map, locMarker)
-          //Clear he animaiton before add the new one
           if (locMarker.getAnimation() !== null) {
-            locMarker.setAnimation(null);
+            locMarker.setAnimation(null)
           } else {
-            //Add the aniamtion when the marker is clicked
+            //Make animation when the marker clicked
           locMarker.setAnimation(window.google.maps.Animation.BOUNCE)
             setTimeout(() => {locMarker.setAnimation(null);}, 400)
           }
         })
-      //Bounds
+      //Extending map marker
       markers.forEach((mark)=>
       bounds.extend(mark.position))
       map.fitBounds(bounds)
     })
   }
 
-  //Trigger a specific marker when the list item is clicked
-  locationItem = (item, event) => {
-    let selectedItem = markers.filter((currentlocation)=> currentlocation.name === item.title)
-    window.google.maps.event.trigger(selectedItem[0], "click");
+  //when the user clicked to the listed location trigger the marker
+  locationItem = (itemloc, event) => {
+    let selectedItem = markers.filter((currentlocation)=> currentlocation.name === itemloc.title)
+    window.google.maps.event.trigger(selectedItem[0], "click")
 
   }
 
  render() {
-  const {locations, query, requestWasSuccessful} = this.state;
+  const {locations, query} = this.state
       //search query from: https://github.com/udacity/reactnd-contacts-complete/blob/master/src/ListContacts.js
     let showingLocations
     if (query){
@@ -148,13 +151,11 @@ class App extends Component {
       showingLocations = locations.filter((location)=> match.test(location.title))
     }
     else{
-      showingLocations=locations
+      showingLocations = locations
     }
 
     return (
-      //If the request was successful and the map is there, render the elements
-      requestWasSuccessful ? (
-        <div>
+        <div role="main">
           <nav className="nav">
             <span id="subject"> Kids Gymnastics</span>
           </nav>
@@ -171,14 +172,9 @@ class App extends Component {
             </div>
           </div>
         </div>
-      ) : (
-      <div>
-        <h1>CAN NOT LOAD GOOGLE MAP</h1>
-      </div>
-      )
       )
     }
   }
   export default scriptLoader(
-    [`https://maps.googleapis.com/maps/api/js?key=AIzaSyBtw340dn7gcAc1VfQuYC-dOAr6AyDgvk8&v=3.exp&libraries=geometry,drawing,places`]
+    [`https://maps.googleapis.com/maps/api/js?key=AIzaSyBtw340dn7gcAc1VfQuYC-dOAr6AyDgvk8&v=3.exp&libraries=places`]
     )(App)

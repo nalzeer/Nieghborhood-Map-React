@@ -1,12 +1,15 @@
-:focus{
-	outline: 5px solid orange;
+.search-locations:focus{
+	outline: 5px solid red;
 }
-a:focus{
-	outline: 5px solid gray;
+
+.search-locations:hover{
+	outline: 5px solid darkgrey;
 }
-a:hover, a:focus, a:active {
+
+li:hover, li:focus, li:active {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+	color: red;
 }
 
 #container {
@@ -33,19 +36,22 @@ a:hover, a:focus, a:active {
   background-color: white;
   position: absolute;
   left: 0;
-  padding: 15px;
+  padding: 0 15px;
   border-radius: 0 10px 10px 0;
 }
 .search-locations{
-  box-sizing: border-box;
-  margin: 15px;
-  padding: 15px 20px;
-  border: 2px solid red;
-  border-radius: 4px;
+	min-height: 28px;
+	width: 90%;
+	border:2px solid red;
+	border-radius: 4px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	font-size: 12px;
 }
-.location-list li {
+li {
   font-size: 15px;
   padding-bottom: 10px;
+	padding-right: 10px;
 }
 .nav {
   height: 30px;
@@ -56,4 +62,20 @@ a:hover, a:focus, a:active {
 }
 #subject {
   text-shadow: 2px 2px #FF0000;
+}
+
+@media screen and (max-width: 860px) {
+	li {
+		font-size: 10px;
+	}
+
+}
+
+@media screen and (max-width: 450px) {
+	li {
+		font-size: 7px;
+	}
+	ul {
+		padding-left: 10px;
+	}
 }
