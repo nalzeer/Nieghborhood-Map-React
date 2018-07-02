@@ -14,12 +14,12 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      locations: [{title: 'AcroSports', phone:'(415) 665-2276', location: {lat: 37.7658835,lng:-122.455487}},
-        {title: 'House of Air', phone:'(415) 345-9675', location: {lat:37.8047921,lng:-122.4687938}},
-        {title: 'My Gym', phone:'(415) 643-5500', location: {lat:37.7594309,lng:-122.3900145}},
-        {title: 'Fitness SF', phone:'(415) 348-6377', location: {lat:37.7695915,lng:-122.4069949}},
-        {title: 'Recess', phone:'(415) 701-7529',location: {lat:37.7625962,lng:-122.4006064}},
-        {title: 'Ms Marians Dance Garden', phone:'(415) 377-2351', location: {lat:37.779935,lng:-122.482164}}],
+      locations: [{title: "AcroSports", phone:'(415) 665-2276', location: {lat: 37.7658835,lng:-122.455487}},
+        {title: "House of Air", phone:'(415) 345-9675', location: {lat:37.8047921,lng:-122.4687938}},
+        {title: "My Gym Children's Fitness Center", phone:'(415) 643-5500', location: {lat:37.7594309,lng:-122.3900145}},
+        {title: "Fitness SF", phone:'(415) 348-6377', location: {lat:37.7695915,lng:-122.4069949}},
+        {title: "Recess Urban Recreation", phone:'(415) 701-7529',location: {lat:37.7625962,lng:-122.4006064}},
+        {title: "Ms. Marian's Dance Garden", phone:'(415) 377-2351', location: {lat:37.779935,lng:-122.482164}}],
       map: {},
       query: '',
       requestWasSuccessful: true,
@@ -31,6 +31,13 @@ class App extends Component {
   updatequery =(query) => {
     this.setState({query: query.trim()})
   }
+
+  //updating the venues from foursquare
+  updateVenue = (venueresult) => {
+    const that = this
+    that.setState({venues:venueresult})
+  }
+
  // react.componant
   componentWillReceiveProps({isScriptLoadSucceed}){
     if (isScriptLoadSucceed) {
@@ -44,10 +51,12 @@ class App extends Component {
     }
     else {
       //Handling map loading error
-      console.log("!!!CAN NOT LOAD GOOGLE MAP!!!")
+      window.alert("!!!CAN NOT LOAD GOOGLE MAP!!!")
+      // console.log("!!!CAN NOT LOAD GOOGLE MAP!!!")
       this.setState({requestWasSuccessful: false})
     }
   }
+
   // mounting (react.componant)
   componentDidMount(){
     const that = this
@@ -60,30 +69,24 @@ class App extends Component {
         url: url,
         dataType: "json",
         success: function(data){
-          const valvenues = data.response.venues
-          $.each(valvenues, function(i,venue){
-            that.setState({venues: venue})
-            console.log(venue)
-            return contentWindow = `<div class="infoWindow">
-                <h4>${venue.name}</h4>
-                <p>${location.phone}</p>
-                <p>${venue.location.formattedAddress}</p>
-                </div>`
-          })
-          // venueresult = Object.keys(valvenues).map(function(key) {
-          //      return [valvenues[key]]
-          //    })
+          const valvenues = data.response.venues[0]
+          const venueresult = Object.keys(valvenues).map(function(key) {
+               return [valvenues[key]]
+             })
+          that.updateVenue(venueresult)
         },
         error: function(data){
-          console.error(data)
+          console.log("Error: ", data)
         }
       })
     })
   }
+
   //updating (react.componant)
   componentDidUpdate(){
+    // const that = this
     //search query from: https://github.com/udacity/reactnd-contacts-complete/blob/master/src/ListContacts.js
-    const {locations, query, map} = this.state
+    const {locations, query, map, venues} = this.state
     let showingLocations = locations
     if (query){
       const match = new RegExp(escapeRegExp(query),"i")
@@ -97,7 +100,12 @@ class App extends Component {
     markers = []
     infoWindows = []
 
-    showingLocations.forEach((marker,index)=> {
+    showingLocations.forEach((location,index)=> {
+      contentWindow = `<div class="infoWindow">
+          <h4>${location.title}</h4>
+          <p>${location.phone}</p>
+          <p>${venues[3]}</p>
+          </div>`
       //Creat InfoWindow object, then add the contentWindow to it
       let LargeInfoWindow = new window.google.maps.InfoWindow({
         content: contentWindow
@@ -105,8 +113,8 @@ class App extends Component {
       //Create the marker
       let locMarker = new window.google.maps.Marker({
         map: map,
-        position: marker.location,
-        name : marker.title,
+        position: location.location,
+        name : location.title,
         animation: window.google.maps.Animation.DROP
       })
       //Creat Bounds object
@@ -182,5 +190,5 @@ class App extends Component {
     }
   }
   export default scriptLoader(
-    [`https://maps.googleapis.com/maps/api/js?key=AIzaSyBtw340dn7gcAc1VfQuYC-dOAr6AyDgvk8&v=3.exp&libraries=places`]
+    [`https://maps.googleapis.com/maps/api/js?key=AIzaSyBtw340dn7gcAc1VfQuYC-dOAr6AyDgvk8&v=3.exp&libraries=geometry,places`]
     )(App)
