@@ -101,6 +101,11 @@ class App extends Component {
     infoWindows = []
 
     showingLocations.forEach((location,index)=> {
+      // let more = venues[3]
+      // const moreInfo = Object.keys(more).map(function(key) {
+      //      return [more[key]]
+      //    })
+      console.log(venues[3])
       contentWindow = `<div class="infoWindow">
           <h4>${location.title}</h4>
           <p>${location.phone}</p>
