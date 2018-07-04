@@ -1,3 +1,4 @@
+/* global google */
 import React, { Component } from 'react'
 import './App.css'
 import {allLocations} from './allLocations.js'
@@ -36,67 +37,71 @@ class App extends Component {
 
   initMap(){
     const self = this
-    //Constructor creates a new map
-    const map = new window.google.maps.Map(document.getElementById('map'), {
-      zoom: 10,
-      //initial point of location
-      center: new window.google.maps.LatLng(37.7749295,-122.4194155),
-      mapTypeControl: false
-    })
+    if (typeof google === 'object' && typeof google.maps === 'object'){
+      //Constructor creates a new map
+      const map = new window.google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        //initial point of location
+        center: new window.google.maps.LatLng(37.7749295,-122.4194155),
+        mapTypeControl: false
+      })
 
-    //Creat InfoWindow object, then add the contentWindow to it
-    let LargeInfoWindow = new window.google.maps.InfoWindow({})
-    // Tracking infoWindow
-    infoWindows.push(LargeInfoWindow)
+      //Creat InfoWindow object, then add the contentWindow to it
+      let LargeInfoWindow = new window.google.maps.InfoWindow({})
+      // Tracking infoWindow
+      infoWindows.push(LargeInfoWindow)
 
-    this.setState({
-      map: map,
-      LargeInfoWindow: LargeInfoWindow
-    })
-
-    //Creat Bounds object
-    let bounds = new window.google.maps.LatLngBounds()
-
-    // close infoWindow when user clicked on the map
-    window.google.maps.event.addListener(map, "click", function() {
-      infoWindows.forEach(info => { info.close() })
-    })
-
-    // Clear the markers and the infoWindows arrays
-    markers = []
-    // infoWindows = []
-    this.state.locations.forEach((location,index) => {
-      //Create the marker
-      let locMarker = new window.google.maps.Marker({
+      this.setState({
         map: map,
-        position: location.location,
-        name : location.title,
-        animation: window.google.maps.Animation.DROP
+        LargeInfoWindow: LargeInfoWindow
       })
-      // Tracking markers
-      markers.push(locMarker)
-      locMarker.addListener("click", function() {
-          //Close the infoWindow, when open another infoWindow
-          infoWindows.forEach(info => { info.close() })
-          //Open the InfoWindow function
-          LargeInfoWindow.open(map, locMarker)
-          if (locMarker.getAnimation() !== null) {
-            locMarker.setAnimation(null)
-          } else {
-            //Make animation when the marker clicked
-          locMarker.setAnimation(window.google.maps.Animation.BOUNCE)
-            setTimeout(() => {locMarker.setAnimation(null)}, 400)
-          }
-          self.setState({ locMarker })
-          console.log(markers)
-          LargeInfoWindow.setContent("Loading Content...")
-          self.getMarkerInfo(locMarker)
+
+      //Creat Bounds object
+      let bounds = new window.google.maps.LatLngBounds()
+
+      // close infoWindow when user clicked on the map
+      window.google.maps.event.addListener(map, "click", function() {
+        infoWindows.forEach(info => { info.close() })
       })
-      //Extending map marker
-      markers.forEach((mark) => bounds.extend(mark.position))
-      map.fitBounds(bounds)
-    })
-  }
+
+      // Clear the markers and the infoWindows arrays
+      markers = []
+      // infoWindows = []
+      this.state.locations.forEach((location,index) => {
+        //Create the marker
+        let locMarker = new window.google.maps.Marker({
+          map: map,
+          position: location.location,
+          name : location.title,
+          animation: window.google.maps.Animation.DROP
+        })
+        // Tracking markers
+        markers.push(locMarker)
+        locMarker.addListener("click", function() {
+            //Close the infoWindow, when open another infoWindow
+            infoWindows.forEach(info => { info.close() })
+            //Open the InfoWindow function
+            LargeInfoWindow.open(map, locMarker)
+            if (locMarker.getAnimation() !== null) {
+              locMarker.setAnimation(null)
+            } else {
+              //Make animation when the marker clicked
+            locMarker.setAnimation(window.google.maps.Animation.BOUNCE)
+              setTimeout(() => {locMarker.setAnimation(null)}, 400)
+            }
+            self.setState({ locMarker })
+            console.log(markers)
+            LargeInfoWindow.setContent("Loading Content...")
+            self.getMarkerInfo(locMarker)
+        })
+        //Extending map marker
+        markers.forEach((mark) => bounds.extend(mark.position))
+        map.fitBounds(bounds)
+      })
+    }else {
+      document.write("CAN NOT LOAD GOOGLE MAP!!!")
+    }
+}
 
   getMarkerInfo(locMarker){
     const that = this
