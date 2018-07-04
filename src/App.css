@@ -30,6 +30,9 @@ li:hover, li:focus, li:active {
   position: relative;
   overflow: hidden;
 }
+.infoWindow{
+  width: 150px;
+}
 .listView {
   height: 100%;
   width: 20%;

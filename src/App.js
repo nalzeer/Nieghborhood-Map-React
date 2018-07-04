@@ -1,120 +1,68 @@
 import React, { Component } from 'react'
 import './App.css'
-import scriptLoader from 'react-async-script-loader'
+import {allLocations} from './allLocations.js'
 import escapeRegExp from 'escape-string-regexp'
 import $ from 'jquery'
 
 
 let markers = []
 let infoWindows = []
-let contentWindow = ""
-// let venueresult = []
 
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      locations: [{title: "AcroSports", phone:'(415) 665-2276', location: {lat: 37.7658835,lng:-122.455487}},
-        {title: "House of Air", phone:'(415) 345-9675', location: {lat:37.8047921,lng:-122.4687938}},
-        {title: "My Gym Children's Fitness Center", phone:'(415) 643-5500', location: {lat:37.7594309,lng:-122.3900145}},
-        {title: "Fitness SF", phone:'(415) 348-6377', location: {lat:37.7695915,lng:-122.4069949}},
-        {title: "Recess Urban Recreation", phone:'(415) 701-7529',location: {lat:37.7625962,lng:-122.4006064}},
-        {title: "Ms. Marian's Dance Garden", phone:'(415) 377-2351', location: {lat:37.779935,lng:-122.482164}}],
+      locations: allLocations,
       map: {},
-      query: '',
-      requestWasSuccessful: true,
-      venues: []
+      LargeInfoWindow: {},
+      locMarker: {},
+      query: ""
     }
+    this.initMap = this.initMap.bind(this)
   }
 
   //updating the query for filtering the locations when user enter location
-  updatequery =(query) => {
+  updatequery = (query) => {
     this.setState({query: query.trim()})
+    infoWindows.forEach(info => { info.close() })
   }
 
-  //updating the venues from foursquare
-  updateVenue = (venueresult) => {
-    const that = this
-    that.setState({venues:venueresult})
-  }
-
- // react.componant
-  componentWillReceiveProps({isScriptLoadSucceed}){
-    if (isScriptLoadSucceed) {
-      //Constructor creates a new map
-      const map = new window.google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        //initial point of location
-        center: new window.google.maps.LatLng(37.7749295,-122.4194155)
-      })
-      this.setState({map})
-    }
-    else {
-      //Handling map loading error
-      window.alert("!!!CAN NOT LOAD GOOGLE MAP!!!")
-      // console.log("!!!CAN NOT LOAD GOOGLE MAP!!!")
-      this.setState({requestWasSuccessful: false})
-    }
-  }
-
-  // mounting (react.componant)
   componentDidMount(){
-    const that = this
-    //Fetching the locations from foursquare API
-    this.state.locations.map((location,index)=>{
-      const clientId = "B4K4J1H0FEKCQHOWJPVSURVTRXJCSWPUSX0LK1LZR04JYC54"
-      const clientSecret = "EHTWPDM13SLQFQ3YXQ0HG2TRLAUWUSYECG5CVRRZ3MS3DJXD"
-      const url = "https://api.foursquare.com/v2/venues/search?client_id=" + clientId + "&client_secret=" + clientSecret + "&v=20130815&ll=" + location.location.lat + "," + location.location.lng + "&limit=1"
-      return $.ajax({
-        url: url,
-        dataType: "json",
-        success: function(data){
-          const valvenues = data.response.venues[0]
-          const venueresult = Object.keys(valvenues).map(function(key) {
-               return [valvenues[key]]
-             })
-          that.updateVenue(venueresult)
-        },
-        error: function(data){
-          console.log("Error: ", data)
-        }
-      })
-    })
+    window.initMap = this.initMap
+    loadMapJS(
+      "https://maps.googleapis.com/maps/api/js?key=AIzaSyBtw340dn7gcAc1VfQuYC-dOAr6AyDgvk8&v=3.exp&libraries=geometry,places&callback=initMap"
+    )
   }
 
-  //updating (react.componant)
-  componentDidUpdate(){
-    // const that = this
-    //search query from: https://github.com/udacity/reactnd-contacts-complete/blob/master/src/ListContacts.js
-    const {locations, query, map, venues} = this.state
-    let showingLocations = locations
-    if (query){
-      const match = new RegExp(escapeRegExp(query),"i")
-      showingLocations = locations.filter((location)=> match.test(location.title))
-    }
-    else {
-      showingLocations = locations
-    }
-    markers.forEach(mark => { mark.setMap(null) })
-    // Make the markers and the infoWindows empty
-    markers = []
-    infoWindows = []
+  initMap(){
+    const self = this
+    //Constructor creates a new map
+    const map = new window.google.maps.Map(document.getElementById('map'), {
+      zoom: 10,
+      //initial point of location
+      center: new window.google.maps.LatLng(37.7749295,-122.4194155),
+      mapTypeControl: false
+    })
 
-    showingLocations.forEach((location,index)=> {
-      // let more = venues[3]
-      // const moreInfo = Object.keys(more).map(function(key) {
-      //      return [more[key]]
-      //    })
-      console.log(venues[3])
-      contentWindow = `<div class="infoWindow">
-          <h4>${location.title}</h4>
-          <p>${location.phone}</p>
-          <p>${venues[3]}</p>
-          </div>`
-      //Creat InfoWindow object, then add the contentWindow to it
-      let LargeInfoWindow = new window.google.maps.InfoWindow({
-        content: contentWindow
-      })
+    //Creat InfoWindow object, then add the contentWindow to it
+    let LargeInfoWindow = new window.google.maps.InfoWindow({})
+    // Tracking infoWindow
+    infoWindows.push(LargeInfoWindow)
+
+    this.setState({
+      map: map,
+      LargeInfoWindow: LargeInfoWindow
+    })
+
+    //Creat Bounds object
+    let bounds = new window.google.maps.LatLngBounds()
+
+    // close infoWindow when user clicked on the map
+    window.google.maps.event.addListener(map, "click", function() {
+      infoWindows.forEach(info => { info.close() })
+    })
+
+    this.state.locations.forEach((location,index) => {
       //Create the marker
       let locMarker = new window.google.maps.Marker({
         map: map,
@@ -122,13 +70,9 @@ class App extends Component {
         name : location.title,
         animation: window.google.maps.Animation.DROP
       })
-      //Creat Bounds object
-      let bounds = new window.google.maps.LatLngBounds()
-
-      // tracking markers and infoWindow
+      // Tracking markers
       markers.push(locMarker)
-      infoWindows.push(LargeInfoWindow)
-
+      // markers = markers.filter(mark => mark.name === location.title)
       locMarker.addListener("click", function() {
           //Close the infoWindow, when open another infoWindow
           infoWindows.forEach(info => { info.close() })
@@ -141,25 +85,56 @@ class App extends Component {
           locMarker.setAnimation(window.google.maps.Animation.BOUNCE)
             setTimeout(() => {locMarker.setAnimation(null)}, 400)
           }
+          self.setState({ locMarker })
+          console.log(markers)
+          LargeInfoWindow.setContent("Loading Content...")
+          self.getMarkerInfo(locMarker)
       })
-      // close infoWindow when user clicked on the map
-      window.google.maps.event.addListener(map, "click", function() {
-        infoWindows.forEach(info => { info.close() })
-      })
-
       //Extending map marker
       markers.forEach((mark)=>
       bounds.extend(mark.position))
       map.fitBounds(bounds)
     })
+
+  }
+
+  getMarkerInfo(locMarker){
+    const that = this
+    //Fetching the locations from foursquare API
+      const clientId = "B4K4J1H0FEKCQHOWJPVSURVTRXJCSWPUSX0LK1LZR04JYC54"
+      const clientSecret = "EHTWPDM13SLQFQ3YXQ0HG2TRLAUWUSYECG5CVRRZ3MS3DJXD"
+      const url = "https://api.foursquare.com/v2/venues/search?client_id=" + clientId + "&client_secret=" + clientSecret + "&v=20130815&ll=" + locMarker.getPosition().lat() + "," + locMarker.getPosition().lng() + "&limit=1"
+      return $.ajax({
+        url: url,
+        dataType: "json",
+        success: function(data){
+          const valvenues = data.response.venues[0]
+          that.setState(valvenues)
+          that.state.LargeInfoWindow.setContent(`<div tabIndex="0" class="infoWindow">
+                   <h4>${valvenues.name}</h4>
+                   <p>${valvenues.location.formattedAddress}</p>
+                   </div>`)
+        },
+        error: function(data){
+          that.state.LargeInfoWindow.setContent(`<div tabIndex="0" class="infoWindow">
+                   <h4>ERROR: ${data}</h4>
+                   </div>`)
+        }
+      })
   }
 
   //when the user clicked to the listed location trigger the marker
   locationItem = (itemloc, event) => {
     let selectedItem = markers.filter((currentlocation)=> currentlocation.name === itemloc.title)
     window.google.maps.event.trigger(selectedItem[0], "click")
-
   }
+
+  //To support accessibility (https://stackoverflow.com/questions/34223558/enter-key-event-handler-on-react-bootstrap-input-component?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)
+  handleKeyPress(target,item,e) {
+    if(item.charCode === 13){
+     this.locationItem(target,e)
+   }
+ }
 
  render() {
   const {locations, query} = this.state
@@ -176,17 +151,17 @@ class App extends Component {
     return (
         <div role="main">
           <nav className="nav">
-            <span id="subject"> Kids Gymnastics</span>
+            <span id="subject" tabIndex="0"> Kids Gymnastics</span>
           </nav>
           <div id="container">
             <div id="map-container" role="application" tabIndex="-1">
-              <div id="map" role="region" aria-label="Philadelphia Neighborhood"></div>
+              <div id="map" role="region"></div>
             </div>
             <div className="listView">
-              <input id="FilteringText" className="search-locations" type="text" placeholder="Search Gym" value={query} onChange={(event)=> this.updatequery(event.target.value)} role="search"/>
-              <ul className="location-list">
+              <input id="FilteringText" className="search-locations" type="text" placeholder="Search Gym" value={query} onChange={(event)=> this.updatequery(event.target.value)} role="search" tabIndex="1"/>
+              <ul className="location-list" tabIndex="1">
                 {showingLocations.map((locationI, index)=>
-                  <li key={index} onClick={this.locationItem.bind(this,locationI)}>{locationI.title}</li>)}
+                  <li key={index} tabIndex={index+2} onKeyPress={this.handleKeyPress.bind(this,locationI)} onClick={this.locationItem.bind(this,locationI)}>{locationI.title}</li>)}
               </ul>
             </div>
           </div>
@@ -194,6 +169,15 @@ class App extends Component {
       )
     }
   }
-  export default scriptLoader(
-    [`https://maps.googleapis.com/maps/api/js?key=AIzaSyBtw340dn7gcAc1VfQuYC-dOAr6AyDgvk8&v=3.exp&libraries=geometry,places`]
-    )(App)
+  export default App
+
+  function loadMapJS(src) {
+  var ref = window.document.getElementsByTagName("script")[0]
+  var script = window.document.createElement("script")
+  script.src = src
+  script.async = true
+  script.onerror = function() {
+    document.write("CAN NOT LOAD GOOGLE MAP!!!")
+  }
+  ref.parentNode.insertBefore(script, ref)
+}
