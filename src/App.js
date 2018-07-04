@@ -62,6 +62,9 @@ class App extends Component {
       infoWindows.forEach(info => { info.close() })
     })
 
+    // Clear the markers and the infoWindows arrays
+    markers = []
+    // infoWindows = []
     this.state.locations.forEach((location,index) => {
       //Create the marker
       let locMarker = new window.google.maps.Marker({
@@ -72,7 +75,6 @@ class App extends Component {
       })
       // Tracking markers
       markers.push(locMarker)
-      // markers = markers.filter(mark => mark.name === location.title)
       locMarker.addListener("click", function() {
           //Close the infoWindow, when open another infoWindow
           infoWindows.forEach(info => { info.close() })
@@ -91,11 +93,9 @@ class App extends Component {
           self.getMarkerInfo(locMarker)
       })
       //Extending map marker
-      markers.forEach((mark)=>
-      bounds.extend(mark.position))
+      markers.forEach((mark) => bounds.extend(mark.position))
       map.fitBounds(bounds)
     })
-
   }
 
   getMarkerInfo(locMarker){
