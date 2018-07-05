@@ -37,6 +37,7 @@ class App extends Component {
 
   initMap(){
     const self = this
+    // Check if map is loaded succefully
     if (typeof google === 'object' && typeof google.maps === 'object'){
       //Constructor creates a new map
       const map = new window.google.maps.Map(document.getElementById('map'), {
@@ -89,11 +90,13 @@ class App extends Component {
             locMarker.setAnimation(window.google.maps.Animation.BOUNCE)
               setTimeout(() => {locMarker.setAnimation(null)}, 400)
             }
+            // setState the marker,when user click the marker represent a unique marker for each location
             self.setState({ locMarker })
-            console.log(markers)
+            console.log(locMarker)
             LargeInfoWindow.setContent("Loading Content...")
             self.getMarkerInfo(locMarker)
         })
+          console.log(markers)
         //Extending map marker
         markers.forEach((mark) => bounds.extend(mark.position))
         map.fitBounds(bounds)
